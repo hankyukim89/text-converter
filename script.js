@@ -6,6 +6,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const processBtn = null; // Removed
     const copyBtn = document.getElementById('copy-btn');
     const sortBtn = document.getElementById('sort-btn');
+    const resetBtn = document.getElementById('reset-btn');
     const saveStatus = document.getElementById('save-status');
     const inputSaveStatus = null;
 
@@ -30,6 +31,12 @@ document.addEventListener('DOMContentLoaded', () => {
     decreaseFontBtn.addEventListener('click', () => adjustFontSize(-0.1));
 
     sortBtn.addEventListener('click', sortRules);
+
+    resetBtn.addEventListener('click', () => {
+        if (confirm('Reset to default rules? This will overwrite your current list.')) {
+            loadDefaultRules(true);
+        }
+    });
 
     copyBtn.addEventListener('click', () => {
         outputText.select();
@@ -131,6 +138,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (savedRules) {
             rulesInput.value = savedRules;
+        } else {
+            loadDefaultRules();
         }
 
         if (savedFont) {
@@ -164,6 +173,24 @@ document.addEventListener('DOMContentLoaded', () => {
         // Trigger save and re-process
         saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
         processText();
+    }
+
+    async function loadDefaultRules(force = false) {
+        try {
+            const response = await fetch('rules.txt');
+            if (response.ok) {
+                const text = await response.text();
+                rulesInput.value = text;
+                // Save to immediate storage so it persists
+                saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
+                processText();
+            } else {
+                console.warn('Default rules file not found');
+            }
+        } catch (e) {
+            console.error('Error loading default rules:', e);
+            if (force) alert('Could not load default rules from server.');
+        }
     }
 
     // Resizer Logic

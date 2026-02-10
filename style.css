@@ -355,3 +355,73 @@ code {
     font-family: inherit;
     margin-top: 0.5rem;
 }
+
+/* AI Settings Modal Specifics */
+.modal {
+    display: none; /* Default hidden */
+}
+
+.modal.visible {
+    display: flex; /* Show when active */
+}
+
+.form-group, .slider-group {
+    margin-bottom: 1.2rem;
+}
+
+.form-group label, .slider-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: var(--text-color);
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group textarea {
+    width: 100%;
+    padding: 0.8rem;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: inherit;
+    font-size: 0.95rem;
+}
+
+.form-group textarea {
+    resize: vertical;
+    min-height: 120px;
+}
+
+.slider-group input[type="range"] {
+    width: 100%;
+    cursor: pointer;
+}
+
+/* Output actions */
+.output-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+/* Modal Body Scroll */
+.modal-body {
+    flex: 1;
+    overflow-y: auto;
+    padding-right: 5px;
+}
+
+.modal-content {
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+}
+
+.modal-footer {
+    padding-top: 1rem;
+    margin-top: 1rem;
+    border-top: 1px solid var(--border-color);
+    display: flex;
+    justify-content: flex-end;
+}

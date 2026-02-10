@@ -3,13 +3,30 @@ document.addEventListener('DOMContentLoaded', () => {
     const inputText = document.getElementById('input-text');
     const outputText = document.getElementById('output-text');
     const rulesInput = document.getElementById('rules-input');
-    const processBtn = null; // Removed
     const copyBtn = document.getElementById('copy-btn');
     const sortBtn = document.getElementById('sort-btn');
-    const resetBtn = document.getElementById('reset-btn');
-    const loadBtn = document.getElementById('load-btn'); // New button
+    const loadBtn = document.getElementById('load-btn');
     const saveStatus = document.getElementById('save-status');
-    const inputSaveStatus = null;
+
+    // AI & Settings Elements
+    const aiScanBtn = document.getElementById('ai-scan-btn');
+    const addToRulesBtn = document.getElementById('add-to-rules-btn');
+    const settingsBtn = document.getElementById('settings-btn');
+    const settingsModal = document.getElementById('settings-modal');
+    const closeSettingsBtn = document.getElementById('close-settings');
+    const saveSettingsBtn = document.getElementById('save-settings-btn');
+
+    // Settings Inputs
+    const apiKeyInput = document.getElementById('api-key');
+    const systemPromptInput = document.getElementById('system-prompt');
+    const tempSlider = document.getElementById('temp-slider');
+    const topkSlider = document.getElementById('topk-slider');
+    const toppSlider = document.getElementById('topp-slider');
+
+    // Settings Display Values
+    const tempValue = document.getElementById('temp-value');
+    const topkValue = document.getElementById('topk-value');
+    const toppValue = document.getElementById('topp-value');
 
     // Font controls
     const increaseFontBtn = document.getElementById('increase-font');
@@ -20,6 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const STORAGE_KEY_RULES = 'text_replacer_rules';
     const STORAGE_KEY_FONT = 'text_replacer_font_size';
     const STORAGE_KEY_GH_TOKEN = 'text_replacer_gh_token';
+    const STORAGE_KEY_AI_SETTINGS = 'text_replacer_ai_settings';
+
+    // Default AI Settings
+    const DEFAULT_SYSTEM_PROMPT = ''; // Cleared for privacy/git push
+
+    // AI State
+    let isAIOutput = false;
+
 
     const REPO_OWNER = 'hankyukim89';
     const REPO_NAME = 'text-converter';
@@ -33,6 +58,25 @@ document.addEventListener('DOMContentLoaded', () => {
     decreaseFontBtn.addEventListener('click', () => adjustFontSize(-0.1));
 
     sortBtn.addEventListener('click', sortRules);
+
+    // AI & Settings Event Listeners
+    settingsBtn.addEventListener('click', openSettings);
+    closeSettingsBtn.addEventListener('click', closeSettings);
+    saveSettingsBtn.addEventListener('click', saveAISettings);
+
+    // Sliders Live Update
+    tempSlider.addEventListener('input', (e) => tempValue.textContent = e.target.value);
+    topkSlider.addEventListener('input', (e) => topkValue.textContent = e.target.value);
+    toppSlider.addEventListener('input', (e) => toppValue.textContent = e.target.value);
+
+    // AI Actions
+    aiScanBtn.addEventListener('click', runAIScan);
+    addToRulesBtn.addEventListener('click', addAIResultsToRules);
+
+    // Close modal on outside click
+    window.addEventListener('click', (e) => {
+        if (e.target === settingsModal) closeSettings();
+    });
 
     // New Load Button Logic
     loadBtn.addEventListener('click', () => {
@@ -67,6 +111,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Text input processing (Real-time)
     inputText.addEventListener('input', () => {
+        if (isAIOutput) {
+            // If user types while viewing AI output, clear the AI state and return to normal processing
+            isAIOutput = false;
+            addToRulesBtn.style.display = 'none';
+        }
         processText(); // Real-time processing
     });
 
@@ -300,5 +349,180 @@ document.addEventListener('DOMContentLoaded', () => {
     function showSaveStatus(element, msg) {
         element.textContent = msg;
         element.classList.add('visible');
+    }
+
+    // --- AI & Settings Logic ---
+
+    function openSettings() {
+        const settings = loadAISettings(); // Get latest
+        apiKeyInput.value = settings.apiKey || '';
+        systemPromptInput.value = settings.systemPrompt || DEFAULT_SYSTEM_PROMPT;
+
+        tempSlider.value = settings.temp;
+        tempValue.textContent = settings.temp;
+
+        topkSlider.value = settings.topK;
+        topkValue.textContent = settings.topK;
+
+        toppSlider.value = settings.topP;
+        toppValue.textContent = settings.topP;
+
+        settingsModal.classList.add('visible');
+    }
+
+    function closeSettings() {
+        settingsModal.classList.remove('visible');
+    }
+
+    function saveAISettings() {
+        const settings = {
+            apiKey: apiKeyInput.value.trim(),
+            systemPrompt: systemPromptInput.value.trim(),
+            temp: parseFloat(tempSlider.value),
+            topK: parseInt(topkSlider.value),
+            topP: parseFloat(toppSlider.value)
+        };
+
+        localStorage.setItem(STORAGE_KEY_AI_SETTINGS, JSON.stringify(settings));
+        closeSettings();
+        alert('Settings saved!');
+    }
+
+    function loadAISettings() {
+        const saved = localStorage.getItem(STORAGE_KEY_AI_SETTINGS);
+        if (saved) {
+            try {
+                return JSON.parse(saved);
+            } catch (e) {
+                console.error('Error parsing AI settings', e);
+            }
+        }
+        return {
+            apiKey: '',
+            systemPrompt: DEFAULT_SYSTEM_PROMPT,
+            temp: 0.1,
+            topK: 40,
+            topP: 0.95
+        };
+    }
+
+    async function runAIScan() {
+        const text = inputText.value.trim();
+        if (!text) {
+            alert('Please enter some text to scan.');
+            return;
+        }
+
+        const settings = loadAISettings();
+        if (!settings.apiKey) {
+            alert('Please set your Gemini API Key in Settings first (Gear icon).');
+            openSettings();
+            return;
+        }
+
+        // UI Loading State
+        const originalBtnText = aiScanBtn.textContent;
+        aiScanBtn.textContent = 'Scanning...';
+        aiScanBtn.disabled = true;
+        outputText.value = 'Analyzing text with Gemini...';
+
+        try {
+            const result = await callGeminiAPI(text, settings);
+
+            // Display Results
+            outputText.value = result;
+            isAIOutput = true;
+            addToRulesBtn.style.display = 'inline-block'; // Show "Add to Rules"
+
+        } catch (error) {
+            outputText.value = 'Error: ' + error.message;
+            console.error('AI Scan Error:', error);
+        } finally {
+            aiScanBtn.textContent = originalBtnText;
+            aiScanBtn.disabled = false;
+        }
+    }
+
+    async function callGeminiAPI(text, settings) {
+        const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent?key=${settings.apiKey}`;
+
+        const payload = {
+            contents: [{
+                parts: [{ text: text }]
+            }],
+            systemInstruction: {
+                parts: [{ text: settings.systemPrompt }]
+            },
+            generationConfig: {
+                temperature: settings.temp,
+                topK: settings.topK,
+                topP: settings.topP,
+                maxOutputTokens: 8192,
+            }
+        };
+
+        const response = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) {
+            const errData = await response.json();
+            throw new Error(errData.error?.message || 'Unknown API Error');
+        }
+
+        const data = await response.json();
+        return data.candidates?.[0]?.content?.parts?.[0]?.text || 'No response from AI.';
+    }
+
+    function addAIResultsToRules() {
+        const aiText = outputText.value;
+        if (!aiText) return;
+
+        const newRules = [];
+        const lines = aiText.split(/\r?\n/);
+
+        // Expected format: Term (Source)
+        // Regex: (.*) \((.*)\)
+        // We want to convert to: Term; Source
+
+        const regex = /^(.*)\s\((.*)\)$/;
+
+        for (const line of lines) {
+            if (!line.trim()) continue;
+
+            const match = line.match(regex);
+            if (match) {
+                const term = match[1].trim();
+                const source = match[2].trim();
+                newRules.push(`${term}; ${source}`);
+            }
+        }
+
+        if (newRules.length === 0) {
+            alert('No valid rules found in the output. Expected format: "Term (Source)"');
+            return;
+        }
+
+        // Append to existing rules
+        const currentRules = rulesInput.value;
+        const separator = currentRules.trim() ? '\n' : '';
+        const updatedRules = currentRules + separator + newRules.join('\n');
+
+        rulesInput.value = updatedRules;
+
+        // Trigger save and process
+        saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
+
+        // Clear AI state and re-process
+        isAIOutput = false;
+        addToRulesBtn.style.display = 'none';
+        processText();
+        syncToGitHub();
+
+        alert(`Added ${newRules.length} new rules!`);
     }
 });

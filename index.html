@@ -13,8 +13,12 @@
 
 <body>
     <div class="app-container">
+
         <header>
             <h1>Text Replacer</h1>
+            <div class="header-right">
+                <button id="settings-btn" class="icon-btn" title="AI Settings">⚙️</button>
+            </div>
             <div class="font-controls">
                 <button id="decrease-font" class="icon-btn" title="Decrease font size">-</button>
                 <span id="font-size-display">Aa</span>
@@ -27,13 +31,18 @@
             <section class="panel left-panel">
                 <div class="panel-header">
                     <h2>Input Text</h2>
+                    <button id="ai-scan-btn" class="secondary-btn" title="Scan with AI">✨ AI Scan</button>
                 </div>
                 <div class="input-group">
                     <textarea id="input-text" placeholder="Paste your text here..."></textarea>
                 </div>
                 <div class="panel-header" style="margin-top: 1rem;">
                     <h2>Output</h2>
-                    <button id="copy-btn" class="secondary-btn">Copy</button>
+                    <div class="output-actions">
+                        <button id="add-to-rules-btn" class="secondary-btn" style="display: none;"
+                            title="Add AI results to rules">Add to Rules</button>
+                        <button id="copy-btn" class="secondary-btn">Copy</button>
+                    </div>
                 </div>
                 <div class="input-group">
                     <textarea id="output-text" readonly placeholder="Result will appear here..."></textarea>
@@ -60,6 +69,44 @@
                 </div>
             </section>
         </main>
+    </div>
+
+    <!-- Settings Modal -->
+    <div id="settings-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>AI Settings</h2>
+                <button id="close-settings" class="close-btn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="api-key">Gemini API Key</label>
+                    <input type="password" id="api-key" placeholder="Enter your Gemini API Key">
+                </div>
+                <div class="form-group">
+                    <label for="system-prompt">System Prompt</label>
+                    <textarea id="system-prompt" rows="10" placeholder="Enter system instructions..."></textarea>
+                </div>
+
+                <div class="slider-group">
+                    <label for="temp-slider">Temperature: <span id="temp-value">0.1</span></label>
+                    <input type="range" id="temp-slider" min="0" max="2" step="0.1" value="0.1">
+                </div>
+
+                <div class="slider-group">
+                    <label for="topk-slider">Top K: <span id="topk-value">40</span></label>
+                    <input type="range" id="topk-slider" min="1" max="100" step="1" value="40">
+                </div>
+
+                <div class="slider-group">
+                    <label for="topp-slider">Top P: <span id="topp-value">0.95</span></label>
+                    <input type="range" id="topp-slider" min="0" max="1" step="0.05" value="0.95">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button id="save-settings-btn" class="primary-btn">Save Settings</button>
+            </div>
+        </div>
     </div>
 
     <!-- Scripts -->

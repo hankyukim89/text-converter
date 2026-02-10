@@ -8,8 +8,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveStatus = document.getElementById('save-status');
     const inputSaveStatus = null;
 
+    // Font controls
+    const increaseFontBtn = document.getElementById('increase-font');
+    const decreaseFontBtn = document.getElementById('decrease-font');
+    let currentFontSize = 1.15; // default in rem
+
     // Persistence Keys
     const STORAGE_KEY_RULES = 'text_replacer_rules';
+    const STORAGE_KEY_FONT = 'text_replacer_font_size';
 
     // Load saved data
     loadFromStorage();
@@ -18,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Event Listeners
     // processBtn.addEventListener('click', processText); // Removed
+
+    increaseFontBtn.addEventListener('click', () => adjustFontSize(0.1));
+    decreaseFontBtn.addEventListener('click', () => adjustFontSize(-0.1));
 
     copyBtn.addEventListener('click', () => {
         outputText.select();
@@ -115,10 +124,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function loadFromStorage() {
         const savedRules = localStorage.getItem(STORAGE_KEY_RULES);
+        const savedFont = localStorage.getItem(STORAGE_KEY_FONT);
 
         if (savedRules) {
             rulesInput.value = savedRules;
         }
+
+        if (savedFont) {
+            currentFontSize = parseFloat(savedFont);
+            applyFontSize();
+        }
+    }
+
+    function adjustFontSize(delta) {
+        currentFontSize += delta;
+        // Clamp between 0.8rem and 3rem
+        currentFontSize = Math.max(0.8, Math.min(3.0, currentFontSize));
+        applyFontSize();
+        localStorage.setItem(STORAGE_KEY_FONT, currentFontSize);
+    }
+
+    function applyFontSize() {
+        document.documentElement.style.setProperty('--content-font-size', `${currentFontSize}rem`);
     }
 
     function showSaveStatus(element, msg) {

@@ -33,7 +33,7 @@ body {
 }
 
 header h1 {
-    font-size: 1.25rem;
+    font-size: 1.5rem;
     font-weight: 600;
     color: var(--text-color);
 }
@@ -42,7 +42,8 @@ header h1 {
     display: flex;
     gap: 1rem;
     flex: 1;
-    min-height: 0; /* Important for scroll */
+    min-height: 0;
+    /* Important for scroll */
 }
 
 .panel {
@@ -70,7 +71,7 @@ header h1 {
 }
 
 .panel-header h2 {
-    font-size: 1rem;
+    font-size: 1.25rem;
     font-weight: 500;
     color: var(--muted-color);
 }
@@ -91,8 +92,8 @@ textarea {
     color: var(--text-color);
     padding: 0.75rem;
     font-family: inherit;
-    font-size: 0.95rem;
-    line-height: 1.5;
+    font-size: 1.15rem;
+    line-height: 1.6;
     resize: none;
     outline: none;
     transition: border-color 0.2s;
@@ -133,7 +134,7 @@ textarea:focus {
 }
 
 .helper-text {
-    font-size: 0.8rem;
+    font-size: 0.95rem;
     color: var(--muted-color);
     margin-bottom: 0.5rem;
 }
@@ -171,7 +172,7 @@ code {
     .split-view {
         flex-direction: column;
     }
-    
+
     body {
         overflow: auto;
     }

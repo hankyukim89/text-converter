@@ -177,7 +177,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     async function loadDefaultRules(force = false) {
         try {
-            const response = await fetch('rules.txt');
+            const response = await fetch('rules.txt?v=' + new Date().getTime());
             if (response.ok) {
                 const text = await response.text();
                 rulesInput.value = text;

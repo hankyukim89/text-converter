@@ -7,6 +7,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const copyBtn = document.getElementById('copy-btn');
     const sortBtn = document.getElementById('sort-btn');
     const resetBtn = document.getElementById('reset-btn');
+    const loadBtn = document.getElementById('load-btn'); // New button
     const saveStatus = document.getElementById('save-status');
     const inputSaveStatus = null;
 
@@ -26,19 +27,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load saved data
     loadFromStorage();
-    // Process immediately on load if there's data
-    // processText(); // No need to process immediately if input is empty, but harmless. 
 
     // Event Listeners
-    // processBtn.addEventListener('click', processText); // Removed
-
     increaseFontBtn.addEventListener('click', () => adjustFontSize(0.1));
     decreaseFontBtn.addEventListener('click', () => adjustFontSize(-0.1));
 
     sortBtn.addEventListener('click', sortRules);
 
-    resetBtn.addEventListener('click', () => {
-        if (confirm('Reset to default rules? This will overwrite your current list.')) {
+    // New Load Button Logic
+    loadBtn.addEventListener('click', () => {
+        if (confirm('Load default rules from rules.txt? This will append/overwrite based on implementation (Overwriting for now).')) {
             loadDefaultRules(true);
         }
     });
@@ -61,7 +59,10 @@ document.addEventListener('DOMContentLoaded', () => {
         saveTimeout = setTimeout(() => {
             saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
             processText(); // Re-process when rules change
-        }, 500);
+
+            // Auto-sync to GitHub if token exists
+            syncToGitHub();
+        }, 1000); // Debounce set to 1s for cloud sync
     });
 
     // Text input processing (Real-time)
@@ -116,15 +117,21 @@ document.addEventListener('DOMContentLoaded', () => {
         let currentText = text;
 
         for (const rule of rules) {
-            for (const source of rule.sources) {
-                // Escape special regex characters
-                const escapedSource = source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+            if (!rule.sources || rule.sources.length === 0) continue;
 
-                // Create global, case-insensitive regex
-                const regex = new RegExp(escapedSource, 'gi');
+            // Sort sources by length descending to match longest first
+            const sortedSources = [...rule.sources].sort((a, b) => b.length - a.length);
 
-                currentText = currentText.replace(regex, rule.replacement);
-            }
+            // Escape special regex characters for each source
+            const escapedSources = sortedSources.map(source =>
+                source.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+            );
+
+            // Create a single regex for all sources: (source1|source2|...)
+            const combinedPattern = escapedSources.join('|');
+            const regex = new RegExp(combinedPattern, 'gi');
+
+            currentText = currentText.replace(regex, rule.replacement);
         }
         return currentText;
     }
@@ -144,12 +151,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (savedRules) {
             rulesInput.value = savedRules;
         } else {
-            // Attempt to load from cloud if token exists, otherwise default
-            if (localStorage.getItem(STORAGE_KEY_GH_TOKEN)) {
-                loadFromGitHub();
-            } else {
-                loadDefaultRules();
-            }
+            // Load defaults if no local save
+            loadDefaultRules();
         }
 
         if (savedFont) {
@@ -183,128 +186,35 @@ document.addEventListener('DOMContentLoaded', () => {
         // Trigger save and re-process
         saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
         processText();
+        syncToGitHub(); // Also sync on sort
     }
 
     async function loadDefaultRules(force = false) {
-        // Fallback to local file if no cloud
         try {
+            // Force bust cache
             const response = await fetch('rules.txt?v=' + new Date().getTime());
             if (response.ok) {
                 const text = await response.text();
                 rulesInput.value = text;
                 saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
                 processText();
+                console.log('Loaded defaults');
             }
         } catch (e) {
             console.warn('Default rules not found');
         }
     }
 
-    // --- GitHub Sync Logic ---
+    // --- GitHub Auto-Sync Logic (Silent) ---
 
-    const syncBtn = document.getElementById('sync-btn');
-    const syncModal = document.getElementById('sync-modal');
-    const closeModal = document.getElementById('close-modal');
-    const saveTokenBtn = document.getElementById('save-token-btn');
-    const clearTokenBtn = document.getElementById('clear-token-btn');
-    const githubTokenInput = document.getElementById('github-token');
-    const syncStatusMsg = document.getElementById('sync-status-msg');
-
-    syncBtn.addEventListener('click', () => {
+    async function syncToGitHub() {
         const token = localStorage.getItem(STORAGE_KEY_GH_TOKEN);
-        if (token) {
-            // If token exists, just sync (push current, then pull latest?) 
-            // Better to Ask: "Sync" usually means Push changes. 
-            // But we want to be safe. Let's open modal to show status/options or just Push.
-            // For simplicity: Open modal, show "Connected", allow "Sync Now"
-            openSyncModal();
-        } else {
-            openSyncModal();
-        }
-    });
+        if (!token) return; // No token, no sync
 
-    closeModal.addEventListener('click', () => {
-        syncModal.classList.add('hidden');
-    });
-
-    window.addEventListener('click', (e) => {
-        if (e.target === syncModal) {
-            syncModal.classList.add('hidden');
-        }
-    });
-
-    saveTokenBtn.addEventListener('click', async () => {
-        const token = githubTokenInput.value.trim();
-        if (!token) return;
-
-        // Verify token by trying to fetch user
-        showSyncStatus('Verifying token...', 'neutral');
-        const isValid = await verifyToken(token);
-
-        if (isValid) {
-            localStorage.setItem(STORAGE_KEY_GH_TOKEN, token);
-            showSyncStatus('Token saved! Syncing...', 'success');
-
-            // Initial Sync: Logic is Tricky. 
-            // Default: Pull from Cloud to ensure we have latest, OR Push local to Cloud?
-            // User likely set up cloud to SAVE their current work.
-            // Let's PUSH first if local has content. 
-            await syncToGitHub(true); // force push
-        } else {
-            showSyncStatus('Invalid Token or Network Error', 'error');
-        }
-    });
-
-    clearTokenBtn.addEventListener('click', () => {
-        localStorage.removeItem(STORAGE_KEY_GH_TOKEN);
-        githubTokenInput.value = '';
-        showSyncStatus('Token cleared.', 'neutral');
-        // update UI state
-    });
-
-    function openSyncModal() {
-        const token = localStorage.getItem(STORAGE_KEY_GH_TOKEN);
-        if (token) {
-            githubTokenInput.value = token; // show hidden? Or just placeholders. 
-            // Security: maybe don't show it.
-            githubTokenInput.value = '••••••••••••••••••••••••';
-            saveTokenBtn.textContent = 'Sync Now (Push & Pull)';
-        } else {
-            githubTokenInput.value = '';
-            saveTokenBtn.textContent = 'Save Token';
-        }
-        syncStatusMsg.textContent = '';
-        syncModal.classList.remove('hidden');
-    }
-
-    function showSyncStatus(msg, type) {
-        syncStatusMsg.textContent = msg;
-        syncStatusMsg.className = ''; // reset
-        if (type === 'success') syncStatusMsg.classList.add('success-msg');
-        if (type === 'error') syncStatusMsg.classList.add('error-msg');
-    }
-
-    async function verifyToken(token) {
-        try {
-            const res = await fetch('https://api.github.com/user', {
-                headers: { 'Authorization': `token ${token}` }
-            });
-            return res.ok;
-        } catch (e) {
-            return false;
-        }
-    }
-
-    async function syncToGitHub(forcePush = false) {
-        const token = localStorage.getItem(STORAGE_KEY_GH_TOKEN);
-        if (!token && !forcePush) return; // Should have token by now if calling this
-
-        // 1. PUSH: Update rules.txt
         const content = rulesInput.value;
-        showSyncStatus('Syncing: Saving to GitHub...', 'neutral');
 
         try {
-            // Get current SHA first
+            // Get current SHA
             const getRes = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${REPO_FILE_PATH}`, {
                 headers: {
                     'Authorization': `token ${token}`,
@@ -320,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // Create/Update file
             const body = {
-                message: 'update rules.txt via Cloud Sync',
+                message: 'auto-update rules.txt',
                 content: btoa(unescape(encodeURIComponent(content))), // Handle UTF-8
                 sha: sha
             };
@@ -335,49 +245,18 @@ document.addEventListener('DOMContentLoaded', () => {
             });
 
             if (putRes.ok) {
-                showSyncStatus('Success! Saved to Cloud.', 'success');
-                setTimeout(() => syncModal.classList.add('hidden'), 1500);
+                console.log('GitHub Auto-Save: Success');
+                showSaveStatus(saveStatus, 'Saved to Cloud');
             } else {
-                const err = await putRes.json();
-                showSyncStatus('Error saving: ' + err.message, 'error');
+                console.warn('GitHub Auto-Save: Failed', await putRes.json());
             }
 
         } catch (e) {
-            console.error(e);
-            showSyncStatus('Network Error during Sync', 'error');
+            console.error('GitHub Auto-Save: Error', e);
         }
     }
 
-    async function loadFromGitHub() {
-        const token = localStorage.getItem(STORAGE_KEY_GH_TOKEN);
-        if (!token) return;
-
-        try {
-            // Fetch raw content to avoid caching issues with Pages
-            const res = await fetch(`https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${REPO_FILE_PATH}`, {
-                headers: {
-                    'Authorization': `token ${token}`,
-                    'Accept': 'application/vnd.github.v3.raw' // Raw content
-                }
-            });
-
-            if (res.ok) {
-                const text = await res.text();
-                // Update local if different
-                if (text !== rulesInput.value) {
-                    rulesInput.value = text;
-                    saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
-                    processText();
-                    console.log('Loaded from Cloud');
-                }
-            }
-        } catch (e) {
-            console.error('Failed to load from cloud:', e);
-        }
-    }
-
-
-    // Resizer Logic
+    // Resizer Logic (Unchanged)
     const resizer = document.getElementById('drag-handle');
     const leftPanel = document.querySelector('.left-panel');
     const container = document.querySelector('.split-view');

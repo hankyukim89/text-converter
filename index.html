@@ -47,44 +47,23 @@
                 <div class="panel-header">
                     <h2>Replacer Rules</h2>
                     <div class="header-actions">
-                        <button id="sync-btn" class="secondary-btn" title="Sync with Cloud (GitHub)">☁️ Sync</button>
-                        <button id="reset-btn" class="secondary-btn" title="Reset to default list">Reset</button>
-                        <button id="sort-btn" class="secondary-btn" title="Sort alphabetically">Sort</button>
-                        <span class="status-indicator" id="save-status">Saved</span>
+                        <div class="header-actions">
+                            <button id="load-btn" class="secondary-btn" title="Load default rules from rules.txt">Load
+                                Defaults</button>
+                            <button id="sort-btn" class="secondary-btn" title="Sort alphabetically">Sort</button>
+                            <span class="status-indicator" id="save-status">Saved</span>
+                        </div>
                     </div>
-                </div>
-                <p class="helper-text">Format: <code>replace; find</code> or <code>replace; word1/word2</code></p>
-                <div class="input-group full-height">
-                    <textarea id="rules-input" placeholder="Coquitlam; coq
-baz; foo/bar"></textarea>
-                </div>
+                    <p class="helper-text">Format: <code>replace; find</code> or <code>replace; word1/word2</code></p>
+                    <div class="input-group full-height">
+                        <!-- Placeholder updated with new default -->
+                        <textarea id="rules-input" placeholder="앨버타주; 알버타 / 앨버타"></textarea>
+                    </div>
             </section>
         </main>
     </div>
-    </main>
-    </div>
 
-    <!-- Sync Modal -->
-    <div id="sync-modal" class="modal hidden">
-        <div class="modal-content">
-            <span id="close-modal" class="close-btn">&times;</span>
-            <h2>Cloud Sync Settings</h2>
-            <p>To save your words permanently to the site, you need a GitHub Personal Access Token.</p>
-            <ol>
-                <li>Go to <a href="https://github.com/settings/tokens" target="_blank">GitHub Settings > Tokens</a></li>
-                <li>Generate a new token (Classic) with <strong>repo</strong> scope.</li>
-                <li>Paste it below.</li>
-            </ol>
-            <div class="input-group">
-                <input type="password" id="github-token" placeholder="ghp_..." />
-            </div>
-            <div class="modal-actions">
-                <button id="save-token-btn" class="primary-btn">Save Token</button>
-                <button id="clear-token-btn" class="secondary-btn">Clear Token</button>
-            </div>
-            <p id="sync-status-msg"></p>
-        </div>
-    </div>
+    <!-- Scripts -->
     <script src="script.js"></script>
 </body>
 

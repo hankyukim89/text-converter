@@ -1,2 +1,1 @@
-Coquitlam; coq
-baz; foo/bar
+앨버타주; 알버타 / 앨버타

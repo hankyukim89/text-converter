@@ -166,6 +166,47 @@ document.addEventListener('DOMContentLoaded', () => {
         processText();
     }
 
+    // Resizer Logic
+    const resizer = document.getElementById('drag-handle');
+    const leftPanel = document.querySelector('.left-panel');
+    const container = document.querySelector('.split-view');
+    let isResizing = false;
+
+    resizer.addEventListener('mousedown', (e) => {
+        isResizing = true;
+        resizer.classList.add('dragging');
+        document.body.style.cursor = 'col-resize';
+        document.body.style.userSelect = 'none'; // Prevent text selection
+    });
+
+    document.addEventListener('mousemove', (e) => {
+        if (!isResizing) return;
+
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        // Calculate new width relative to container left
+        // X position relative to viewport - container left position
+        const newLeftWidth = e.clientX - containerRect.left;
+
+        // Convert to percentage for responsiveness
+        let newWidthPercent = (newLeftWidth / containerWidth) * 100;
+
+        // Limits (10% to 90%)
+        newWidthPercent = Math.max(10, Math.min(90, newWidthPercent));
+
+        leftPanel.style.width = `${newWidthPercent}%`;
+        // Right panel automatically takes remaining space due to flex: 1
+    });
+
+    document.addEventListener('mouseup', () => {
+        if (isResizing) {
+            isResizing = false;
+            resizer.classList.remove('dragging');
+            document.body.style.cursor = '';
+            document.body.style.userSelect = '';
+        }
+    });
+
     function showSaveStatus(element, msg) {
         element.textContent = msg;
         element.classList.add('visible');

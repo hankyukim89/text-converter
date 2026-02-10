@@ -83,7 +83,7 @@ header h1 {
 
 .split-view {
     display: flex;
-    gap: 1rem;
+    /* gap: 1rem; -- Remove gap, use resizer */
     flex: 1;
     min-height: 0;
     /* Important for scroll */
@@ -96,14 +96,42 @@ header h1 {
     padding: 1rem;
     display: flex;
     flex-direction: column;
+    min-width: 200px;
+    /* Prevent collapse */
 }
 
 .left-panel {
-    flex: 2;
+    width: 66%;
+    /* Initial width */
 }
 
 .right-panel {
     flex: 1;
+    /* Take remaining space */
+}
+
+.resizer {
+    width: 8px;
+    background-color: transparent;
+    cursor: col-resize;
+    transition: background-color 0.2s;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-shrink: 0;
+}
+
+.resizer:hover,
+.resizer.dragging {
+    background-color: rgba(59, 130, 246, 0.2);
+}
+
+.resizer::after {
+    content: '';
+    width: 2px;
+    height: 40px;
+    background-color: var(--border-color);
+    border-radius: 1px;
 }
 
 .panel-header {

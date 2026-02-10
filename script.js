@@ -87,8 +87,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const replacement = parts[0].trim(); // First part is now the replacement
             const sourcePart = parts[1].trim(); // Second part is source(s)
 
-            // Split source by &
-            const sources = sourcePart.split('&').map(s => s.trim()).filter(s => s);
+            // Split source by /
+            const sources = sourcePart.split('/').map(s => s.trim()).filter(s => s);
 
             if (sources.length > 0) {
                 rules.push({

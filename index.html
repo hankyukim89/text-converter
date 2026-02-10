@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Replacer</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+
+<body>
+    <div class="app-container">
+        <header>
+            <h1>Text Replacer</h1>
+        </header>
+
+        <main class="split-view">
+            <!-- Left Panel: Text Processing -->
+            <section class="panel left-panel">
+                <div class="panel-header">
+                    <h2>Input Text</h2>
+                </div>
+                <div class="input-group">
+                    <textarea id="input-text" placeholder="Paste your text here..."></textarea>
+                </div>
+                <div class="panel-header" style="margin-top: 1rem;">
+                    <h2>Output</h2>
+                    <button id="copy-btn" class="secondary-btn">Copy</button>
+                </div>
+                <div class="input-group">
+                    <textarea id="output-text" readonly placeholder="Result will appear here..."></textarea>
+                </div>
+            </section>
+
+            <!-- Right Panel: Rules -->
+            <section class="panel right-panel">
+                <div class="panel-header">
+                    <h2>Replacer Rules</h2>
+                    <span class="status-indicator" id="save-status">Saved</span>
+                </div>
+                <p class="helper-text">Format: <code>find; replace</code> or <code>word1&word2; replace</code></p>
+                <div class="input-group full-height">
+                    <textarea id="rules-input" placeholder="coq; Coquitlam
+foo&bar; baz"></textarea>
+                </div>
+            </section>
+        </main>
+    </div>
+    <script src="script.js"></script>
+</body>
+
+</html>

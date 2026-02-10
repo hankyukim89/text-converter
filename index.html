@@ -44,12 +44,15 @@
             <section class="panel right-panel">
                 <div class="panel-header">
                     <h2>Replacer Rules</h2>
-                    <span class="status-indicator" id="save-status">Saved</span>
+                    <div class="header-actions">
+                        <button id="sort-btn" class="secondary-btn" title="Sort alphabetically">Sort</button>
+                        <span class="status-indicator" id="save-status">Saved</span>
+                    </div>
                 </div>
-                <p class="helper-text">Format: <code>find; replace</code> or <code>word1&word2; replace</code></p>
+                <p class="helper-text">Format: <code>replace; find</code> or <code>replace; word1&word2</code></p>
                 <div class="input-group full-height">
-                    <textarea id="rules-input" placeholder="coq; Coquitlam
-foo&bar; baz"></textarea>
+                    <textarea id="rules-input" placeholder="Coquitlam; coq
+baz; foo&bar"></textarea>
                 </div>
             </section>
         </main>

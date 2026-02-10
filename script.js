@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const rulesInput = document.getElementById('rules-input');
     const processBtn = null; // Removed
     const copyBtn = document.getElementById('copy-btn');
+    const sortBtn = document.getElementById('sort-btn');
     const saveStatus = document.getElementById('save-status');
     const inputSaveStatus = null;
 
@@ -27,6 +28,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     increaseFontBtn.addEventListener('click', () => adjustFontSize(0.1));
     decreaseFontBtn.addEventListener('click', () => adjustFontSize(-0.1));
+
+    sortBtn.addEventListener('click', sortRules);
 
     copyBtn.addEventListener('click', () => {
         outputText.select();
@@ -81,8 +84,8 @@ document.addEventListener('DOMContentLoaded', () => {
             const parts = line.split(';');
             if (parts.length < 2) continue; // Skip invalid lines
 
-            const sourcePart = parts[0].trim();
-            const replacement = parts[1].trim(); // Keep replacement as is (allow case)
+            const replacement = parts[0].trim(); // First part is now the replacement
+            const sourcePart = parts[1].trim(); // Second part is source(s)
 
             // Split source by &
             const sources = sourcePart.split('&').map(s => s.trim()).filter(s => s);
@@ -146,6 +149,21 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function applyFontSize() {
         document.documentElement.style.setProperty('--content-font-size', `${currentFontSize}rem`);
+    }
+
+    function sortRules() {
+        const raw = rulesInput.value;
+        const lines = raw.split(/\r?\n/).filter(line => line.trim());
+
+        lines.sort((a, b) => {
+            return a.localeCompare(b, undefined, { sensitivity: 'base' });
+        });
+
+        rulesInput.value = lines.join('\n');
+
+        // Trigger save and re-process
+        saveToStorage(rulesInput, STORAGE_KEY_RULES, saveStatus);
+        processText();
     }
 
     function showSaveStatus(element, msg) {

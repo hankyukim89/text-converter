@@ -113,6 +113,12 @@ header h1 {
     margin-bottom: 0.75rem;
 }
 
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
 .panel-header h2 {
     font-size: 1.25rem;
     font-weight: 500;
